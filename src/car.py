@@ -30,6 +30,8 @@ class Car:
         total_force = drag_force + rolling_resistance
         # Convert force to load (torque) using the wheel radius (assuming wheel radius of 0.3 m)
         self.engine.load = total_force * self.wheel_radius
+        return self.engine.load
+
 
     def update(self, keys):
         if keys[pg.K_UP] and self.engine.throttle_position < 100:
@@ -93,6 +95,7 @@ if __name__ == "__main__":
 
         keys = pg.key.get_pressed()
         car.update(keys)
+        car.physics()
         
         screen.fill((0, 0, 0))
         
