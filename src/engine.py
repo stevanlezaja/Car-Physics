@@ -1,6 +1,8 @@
 import pygame as pg
 import numpy as np
 
+from transmission import Transmission
+
 TIMESTEP = 1/30
 class Engine:
     def __init__(self):
@@ -31,6 +33,7 @@ class Engine:
         self.inertia = 0.01  # kg m²
         self.friction = 0.01  # Nm
         self.load = 0  # Nm
+        self.transmission = Transmission()
 
     def set_throttle(self, throttle_position):
         self.throttle_position = np.clip(throttle_position, 0, 100)
@@ -43,8 +46,7 @@ class Engine:
         # Interpolate torque from the torque curve
         torque = np.interp(self.rpm, list(self.torque_curve.keys()), list(self.torque_curve.values()))
         return torque * (self.throttle_position / 100)  # Adjust torque based on throttle position
-    
-
+        
     def update_rpm(self, time_step=TIMESTEP):
         torque = self.get_torque()
         # Calculate friction torque
@@ -61,7 +63,7 @@ class Engine:
         self.update_rpm()
         power = self.get_power()
         torque = self.get_torque()
-        return power, torque
+
     
 def draw_rpm_bar(screen, rpm, max_rpm, position, size):
     # Calculate the height of the filled part of the bar
@@ -110,6 +112,12 @@ if __name__ == "__main__":
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
+            if event.type == pg.KEYDOWN and event.key == pg.K_a:
+                engine.transmission.shift_up()
+                print(engine.transmission.current_gear)
+            elif event.type == pg.KEYDOWN and event.key == pg.K_z:
+                engine.transmission.shift_down()
+                print(engine.transmission.current_gear)
         keys = pg.key.get_pressed()
         if keys[pg.K_UP] and engine.throttle_position < 100:
             engine.throttle_position += 10
@@ -117,6 +125,7 @@ if __name__ == "__main__":
             engine.throttle_position = engine.throttle_position
         elif engine.throttle_position > 0:
             engine.throttle_position -= 10
+
         engine.update()
         screen.fill((0, 0, 0))  # Clear the screen
         draw_rpm_bar(screen, engine.rpm, max(engine.torque_curve.keys()), (50, 50), (50, 300))
